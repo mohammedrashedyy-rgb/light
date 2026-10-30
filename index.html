@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكاة دارة غياب الضوء - إعداد المعلم محمد راشد</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: #090d16;
+            color: #f8fafc;
+        }
+
+        /* SVG Current Flow Animation */
+        .electron-flow {
+            stroke-dasharray: 6 6;
+            animation: flow 0.6s linear infinite;
+        }
+
+        @keyframes flow {
+            from { stroke-dashoffset: 24; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Range Sliders */
+        input[type=range] {
+            accent-color: #3b82f6;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+            border-color: #60a5fa;
+        }
+
+        /* Assembly Glow Effect */
+        .component-placed {
+            filter: drop-shadow(0 0 10px #38bdf8);
+            animation: popIn 0.4s ease-out forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; rx: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Header -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- App Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-blue-400/30">
+                    <i class="fa-solid fa-bolt text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-white tracking-wide">دارة غياب الضوء (Dark Detector)</h1>
+                    <p class="text-xs text-blue-400 font-semibold">تطبيق محاكاة تفاعلي علمي</p>
+                </div>
+            </div>
+
+            <!-- Teacher Banner -->
+            <div class="flex items-center gap-3 bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border border-amber-500/40 px-5 py-2 rounded-2xl shadow-lg">
+                <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 border border-amber-500/30">
+                    <i class="fa-solid fa-user-tie text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] text-amber-300 font-bold block -mb-1">تصميم وإعداد:</span>
+                    <span class="text-base font-black text-amber-400">المعلم محمد راشد</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 mt-6 w-full">
+        <div class="grid grid-cols-2 gap-3 bg-slate-900/90 p-2 rounded-2xl border border-slate-800 max-w-lg mx-auto shadow-xl">
+            <button id="tab1-btn" onclick="switchTab(1)" class="tab-btn active py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border border-transparent">
+                <i class="fa-solid fa-play text-base"></i>
+                محاكاة الدارة
+            </button>
+            <button id="tab2-btn" onclick="switchTab(2)" class="tab-btn py-3 px-4 rounded-xl font-bold text-sm text-slate-400 hover:text-white flex items-center justify-center gap-2 border border-transparent">
+                <i class="fa-solid fa-puzzle-piece text-base"></i>
+                تركيب قطع الدارة
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 mt-6 w-full flex-grow">
+
+        <!-- OPTION 1: CIRCUIT SIMULATION -->
+        <div id="tab1-content" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Circuit Diagram Canvas Area (8 Cols) -->
+            <div class="lg:col-span-8 flex flex-col gap-5">
+                
+                <!-- Interactive Controls Bar -->
+                <div class="glass-panel rounded-2xl p-5 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Control 1: Ambient Light Slider -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-amber-300 flex items-center gap-2">
+                                <i class="fa-solid fa-sun text-amber-400 text-base"></i>
+                                مستوى الضوء المحيط:
+                            </label>
+                            <span id="light-val-badge" class="text-xs font-bold text-blue-400 bg-blue-950/80 px-2.5 py-1 rounded-lg border border-blue-800">100% (نهار مشمس)</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-moon text-indigo-400 text-lg"></i>
+                            <input type="range" id="sim-light-slider" min="0" max="100" value="100" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                            <i class="fa-solid fa-sun text-amber-400 text-lg"></i>
+                        </div>
+                    </div>
+
+                    <!-- Control 2: Variable Resistor Slider (R2 100K) -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-sky-300 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-sky-400 text-base"></i>
+                                المقاومة المتغيرة $R_2$ (100KΩ):
+                            </label>
+                            <span id="r2-val-badge" class="text-xs font-bold text-sky-400 bg-sky-950/80 px-2.5 py-1 rounded-lg border border-sky-800">50 KΩ</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400">1K</span>
+                            <input type="range" id="sim-r2-slider" min="1" max="100" value="50" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                            <span class="text-xs font-bold text-slate-400">100K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schematic SVG Diagram -->
+                <div class="glass-panel rounded-2xl p-6 shadow-2xl flex items-center justify-center relative overflow-hidden bg-slate-950/80 min-h-[420px]">
+                    
+                    <svg viewBox="0 0 600 480" class="w-full max-w-[550px] h-auto drop-shadow-md">
+                        <!-- Main Circuit Wire Lines -->
+                        <g stroke="#94a3b8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Outer Loop Right -->
+                            <path d="M 150 40 L 480 40 L 480 200" />
+                            <path d="M 480 280 L 480 440 L 150 440" />
+
+                            <!-- Left Branch (R2 & LDR) -->
+                            <path d="M 150 40 L 150 120" />
+                            <path d="M 150 180 L 150 320" />
+                            <path d="M 150 380 L 150 440" />
+
+                            <!-- Middle Base Connection (R3) -->
+                            <path d="M 150 250 L 210 250" />
+                            <path d="M 270 250 L 330 250" />
+
+                            <!-- Collector Branch (R1 & LED & Transistor C) -->
+                            <path d="M 350 40 L 350 90" />
+                            <path d="M 350 130 L 350 170" />
+                            <path d="M 350 210 L 350 220" />
+
+                            <!-- Emitter Branch (Transistor E to GND) -->
+                            <path d="M 350 280 L 350 440" />
+                            <path d="M 150 440 L 350 440" />
+                        </g>
+
+                        <!-- ELECTRON FLOW ANIMATED OVERLAYS -->
+                        <g id="electron-path-main" class="electron-flow opacity-0 transition-opacity duration-300" stroke="#60a5fa" stroke-width="3" fill="none">
+                            <path d="M 150 40 L 350 40 L 350 90" />
+                            <path d="M 350 130 L 350 170" />
+                            <path d="M 350 210 L 350 220" />
+                            <path d="M 350 280 L 350 440 L 480 440 L 480 280" />
+                            <path d="M 480 200 L 480 40 L 150 40" />
+                        </g>
+
+                        <!-- 1. BATTERY (بطارية 9V) -->
+                        <g transform="translate(480, 240)">
+                            <!-- Battery Symbol -->
+                            <line x1="0" y1="-25" x2="0" y2="-40" stroke="#94a3b8" stroke-width="3" />
+                            <line x1="0" y1="25" x2="0" y2="40" stroke="#94a3b8" stroke-width="3" />
+                            <!-- Long Positive Plate -->
+                            <line x1="-20" y1="-12" x2="20" y2="-12" stroke="#ef4444" stroke-width="4" />
+                            <!-- Short Negative Plate -->
+                            <line x1="-12" y1="0" x2="12" y2="0" stroke="#3b82f6" stroke-width="4" />
+                            <!-- Long Positive Plate -->
+                            <line x1="-20" y1="12" x2="20" y2="12" stroke="#ef4444" stroke-width="4" />
+                            <text x="32" y="-10" fill="#ef4444" font-size="16" font-weight="black">+</text>
+                            <text x="32" y="18" fill="#3b82f6" font-size="18" font-weight="black">-</text>
+                            <text x="-35" y="5" fill="#f8fafc" font-size="14" font-weight="bold" text-anchor="end">بطارية 9V</text>
+                        </g>
+
+                        <!-- 2. VARIABLE RESISTOR R2 (مـ2 100KΩ) -->
+                        <g transform="translate(150, 150)">
+                            <rect x="-10" y="-20" width="20" height="40" fill="#0f172a" stroke="#f8fafc" stroke-width="2.5" rx="2" />
+                            <!-- Zigzag / Arrow -->
+                            <line x1="-18" y1="18" x2="18" y2="-18" stroke="#38bdf8" stroke-width="3" />
+                            <polygon points="18,-18 10,-18 18,-10" fill="#38bdf8" />
+                            <text x="-22" y="-5" fill="#f8fafc" font-size="13" font-weight="bold" text-anchor="end">م2</text>
+                            <text x="-22" y="12" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="end">100K Ω</text>
+                        </g>
+
+                        <!-- 3. LDR LIGHT SENSOR (مجس ضوئي) -->
+                        <g transform="translate(150, 350)">
+                            <circle cx="0" cy="0" r="22" fill="#0f172a" stroke="#f8fafc" stroke-width="2.5" />
+                            <!-- Resistor Symbol Inside -->
+                            <path d="M -12 0 L -8 -6 L -2 6 L 4 -6 L 8 6 L 12 0" fill="none" stroke="#f59e0b" stroke-width="2" />
+                            <!-- Incoming Light Arrows -->
+                            <g id="ldr-light-arrows" stroke="#f59e0b" stroke-width="2" fill="#f59e0b">
+                                <line x1="-34" y1="-28" x2="-22" y2="-16" />
+                                <polygon points="-22,-16 -28,-16 -22,-22" />
+                                <line x1="-28" y1="-34" x2="-16" y2="-22" />
+                                <polygon points="-16,-22 -22,-22 -16,-28" />
+                            </g>
+                            <text x="-30" y="5" fill="#f8fafc" font-size="13" font-weight="bold" text-anchor="end">مجس ضوئي</text>
+                            <text x="-30" y="22" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="end">LDR</text>
+                        </g>
+
+                        <!-- 4. BASE RESISTOR R3 (مـ3 1KΩ) -->
+                        <g transform="translate(240, 250)">
+                            <rect x="-20" y="-10" width="40" height="20" fill="#0f172a" stroke="#f8fafc" stroke-width="2.5" rx="2" />
+                            <text x="0" y="-15" fill="#f8fafc" font-size="13" font-weight="bold" text-anchor="middle">م3</text>
+                            <text x="0" y="28" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="middle">1K Ω</text>
+                        </g>
+
+                        <!-- 5. TRANSISTOR BC547 (T1) -->
+                        <g transform="translate(350, 250)">
+                            <!-- Base, Collector, Emitter lines -->
+                            <line x1="-20" y1="0" x2="-8" y2="0" stroke="#f8fafc" stroke-width="2.5" />
+                            <!-- Main Bar -->
+                            <line x1="-8" y1="-18" x2="-8" y2="18" stroke="#f8fafc" stroke-width="4" />
+                            <!-- Collector Pin -->
+                            <line x1="-8" y1="-10" x2="0" y2="-30" stroke="#f8fafc" stroke-width="2.5" />
+                            <!-- Emitter Pin with Arrow -->
+                            <line x1="-8" y1="10" x2="0" y2="30" stroke="#f8fafc" stroke-width="2.5" />
+                            <polygon points="-2,24 2,32 -6,28" fill="#f8fafc" />
+
+                            <!-- Pins Labels -->
+                            <text x="-25" y="-6" fill="#60a5fa" font-size="12" font-weight="black">B</text>
+                            <text x="8" y="-22" fill="#60a5fa" font-size="12" font-weight="black">C</text>
+                            <text x="8" y="32" fill="#60a5fa" font-size="12" font-weight="black">E</text>
+
+                            <!-- Transistor Name -->
+                            <text x="22" y="-5" fill="#f8fafc" font-size="13" font-weight="bold">T1</text>
+                            <text x="22" y="12" fill="#94a3b8" font-size="12" font-weight="bold">BC547</text>
+                        </g>
+
+                        <!-- 6. COLLECTOR RESISTOR R1 (مـ1 330Ω) -->
+                        <g transform="translate(350, 110)">
+                            <rect x="-10" y="-18" width="20" height="36" fill="#0f172a" stroke="#f8fafc" stroke-width="2.5" rx="2" />
+                            <text x="-18" y="-4" fill="#f8fafc" font-size="13" font-weight="bold" text-anchor="end">م1</text>
+                            <text x="-18" y="14" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="end">330 Ω</text>
+                        </g>
+
+                        <!-- 7. LED D1 -->
+                        <g transform="translate(350, 190)">
+                            <!-- Triangle -->
+                            <polygon points="-12,-10 12,-10 0,10" fill="#0f172a" stroke="#f8fafc" stroke-width="2.5" />
+                            <line x1="-12" y1="10" x2="12" y2="10" stroke="#f8fafc" stroke-width="2.5" />
+
+                            <!-- Emitted Light Rays -->
+                            <g id="led-light-rays" opacity="0" class="transition-opacity duration-300">
+                                <line x1="16" y1="-4" x2="26" y2="-12" stroke="#ef4444" stroke-width="2" />
+                                <polygon points="26,-12 20,-12 26,-6" fill="#ef4444" />
+                                <line x1="16" y1="6" x2="26" y2="-2" stroke="#ef4444" stroke-width="2" />
+                                <polygon points="26,-2 20,-2 26,4" fill="#ef4444" />
+                            </g>
+
+                            <!-- LED Glow Bulb Overlay -->
+                            <circle id="led-glow-circle" cx="0" cy="0" r="28" fill="#ef4444" opacity="0" class="transition-all duration-300 pointer-events-none" />
+
+                            <text x="35" y="-2" fill="#f8fafc" font-size="13" font-weight="bold">D1</text>
+                            <text x="35" y="15" fill="#ef4444" font-size="12" font-weight="bold">LED</text>
+                        </g>
+
+                    </svg>
+
+                </div>
+            </div>
+
+            <!-- Side Readings Panel (4 Cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                
+                <div class="glass-panel rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+                    <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-blue-400"></i>
+                        مؤشرات وحالة الدارة اللحظية:
+                    </h3>
+
+                    <!-- Metric 1: Transistor Status -->
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 block font-bold">حالة الترانزستور (T1):</span>
+                            <span id="stat-transistor" class="text-base font-black text-slate-400">OFF (في حالة قطع)</span>
+                        </div>
+                        <div id="stat-trans-icon" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500">
+                            <i class="fa-solid fa-toggle-off text-xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: LED Status -->
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 block font-bold">حالة الثنائي (LED D1):</span>
+                            <span id="stat-led" class="text-base font-black text-slate-400">مطفأ ⚪</span>
+                        </div>
+                        <div id="stat-led-icon" class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500">
+                            <i class="fa-regular fa-lightbulb text-xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: LDR Resistance -->
+                    <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-300 font-bold">مقاومة الحساس (LDR):</span>
+                        <span id="stat-ldr-res" class="text-sm font-extrabold text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-lg border border-amber-800">400 Ω</span>
+                    </div>
+
+                    <!-- Metric 4: Base Voltage V_B -->
+                    <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-300 font-bold">جهد القاعدة ($V_B$):</span>
+                        <span id="stat-vb" class="text-sm font-extrabold text-sky-400 bg-sky-950/60 px-2.5 py-0.5 rounded-lg border border-sky-800">0.07 V</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- OPTION 2: CIRCUIT ASSEMBLY (تركيب قطع الدارة) -->
+        <div id="tab2-content" class="hidden flex-col gap-6">
+            
+            <!-- Top Controls Header -->
+            <div class="glass-panel rounded-2xl p-4 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                        <i class="fa-solid fa-microchip text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-white text-base">منصة تركيب المكونات في الدارة</h3>
+                        <p class="text-xs text-slate-400 font-semibold">انقر على القطع بالأسفل لتركيبها وإضاءة مكانها في الدارة مباشرة</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-800 text-center">
+                        <span class="text-[10px] text-slate-400 font-bold block">تم التركيب:</span>
+                        <span id="assembly-count-text" class="text-base font-black text-indigo-400">0 / 7 قطع</span>
+                    </div>
+
+                    <button onclick="resetAssembly()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                        إعادة التركيب
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top Assembly Circuit Drawing Area -->
+            <div class="glass-panel rounded-2xl p-6 shadow-2xl flex items-center justify-center relative overflow-hidden bg-slate-950/90 min-h-[400px]">
+                
+                <!-- Completion Alert Overlay -->
+                <div id="assembly-done-overlay" class="hidden absolute inset-0 z-30 bg-slate-950/85 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center animate-fade-in">
+                    <div class="w-16 h-16 bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center text-3xl mb-3 shadow-xl shadow-emerald-500/20 animate-bounce">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-white mb-1">ممتاز جداً! تم تركيب جميع قطع الدارة بنجاح ⚡</h2>
+                    <p class="text-xs text-slate-300 max-w-md mb-5">الدارة الإلكترونية الآن مكتملة وجاهزة للعمل والتجربة.</p>
+                    <button onclick="switchTab(1)" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black px-6 py-3 rounded-xl text-xs transition-all shadow-xl shadow-blue-500/30 flex items-center gap-2">
+                        الانتقال إلى محاكاة وتجربة الدارة <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+
+                <!-- Schematic Diagram with Ghost/Target Places -->
+                <svg viewBox="0 0 600 480" class="w-full max-w-[550px] h-auto">
+                    <!-- Base Wire Frame -->
+                    <g stroke="#334155" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M 150 40 L 480 40 L 480 200" />
+                        <path d="M 480 280 L 480 440 L 150 440" />
+                        <path d="M 150 40 L 150 120" />
+                        <path d="M 150 180 L 150 320" />
+                        <path d="M 150 380 L 150 440" />
+                        <path d="M 150 250 L 210 250" />
+                        <path d="M 270 250 L 330 250" />
+                        <path d="M 350 40 L 350 90" />
+                        <path d="M 350 130 L 350 170" />
+                        <path d="M 350 210 L 350 220" />
+                        <path d="M 350 280 L 350 440" />
+                        <path d="M 150 440 L 350 440" />
+                    </g>
+
+                    <!-- 1. SLOT & PLACED ITEM: BATTERY 9V -->
+                    <g transform="translate(480, 240)">
+                        <!-- Ghost Slot Outline -->
+                        <g id="asm-slot-battery" opacity="0.25">
+                            <rect x="-25" y="-35" width="50" height="70" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" rx="6" />
+                            <text x="0" y="5" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="middle">بطارية 9V</text>
+                        </g>
+                        <!-- Highlighted Placed Component -->
+                        <g id="asm-item-battery" class="hidden component-placed">
+                            <line x1="0" y1="-25" x2="0" y2="-40" stroke="#38bdf8" stroke-width="3" />
+                            <line x1="0" y1="25" x2="0" y2="40" stroke="#38bdf8" stroke-width="3" />
+                            <line x1="-20" y1="-12" x2="20" y2="-12" stroke="#ef4444" stroke-width="4" />
+                            <line x1="-12" y1="0" x2="12" y2="0" stroke="#3b82f6" stroke-width="4" />
+                            <line x1="-20" y1="12" x2="20" y2="12" stroke="#ef4444" stroke-width="4" />
+                            <text x="30" y="-8" fill="#ef4444" font-size="14" font-weight="black">+</text>
+                            <text x="30" y="16" fill="#3b82f6" font-size="16" font-weight="black">-</text>
+                            <text x="-32" y="5" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="end">بطارية 9V</text>
+                        </g>
+                    </g>
+
+                    <!-- 2. SLOT & PLACED ITEM: R2 (100K) -->
+                    <g transform="translate(150, 150)">
+                        <g id="asm-slot-r2" opacity="0.25">
+                            <rect x="-22" y="-22" width="44" height="44" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" rx="6" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">100KΩ</text>
+                        </g>
+                        <g id="asm-item-r2" class="hidden component-placed">
+                            <rect x="-10" y="-20" width="20" height="40" fill="#0f172a" stroke="#38bdf8" stroke-width="3" rx="2" />
+                            <line x1="-18" y1="18" x2="18" y2="-18" stroke="#38bdf8" stroke-width="3" />
+                            <polygon points="18,-18 10,-18 18,-10" fill="#38bdf8" />
+                            <text x="-22" y="5" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="end">م2 100KΩ</text>
+                        </g>
+                    </g>
+
+                    <!-- 3. SLOT & PLACED ITEM: LDR SENSOR -->
+                    <g transform="translate(150, 350)">
+                        <g id="asm-slot-ldr" opacity="0.25">
+                            <circle cx="0" cy="0" r="24" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">LDR</text>
+                        </g>
+                        <g id="asm-item-ldr" class="hidden component-placed">
+                            <circle cx="0" cy="0" r="22" fill="#0f172a" stroke="#f59e0b" stroke-width="3" />
+                            <path d="M -12 0 L -8 -6 L -2 6 L 4 -6 L 8 6 L 12 0" fill="none" stroke="#f59e0b" stroke-width="2" />
+                            <g stroke="#f59e0b" stroke-width="2" fill="#f59e0b">
+                                <line x1="-34" y1="-28" x2="-22" y2="-16" />
+                                <polygon points="-22,-16 -28,-16 -22,-22" />
+                            </g>
+                            <text x="-30" y="5" fill="#f59e0b" font-size="13" font-weight="bold" text-anchor="end">مجس LDR</text>
+                        </g>
+                    </g>
+
+                    <!-- 4. SLOT & PLACED ITEM: R3 (1K) -->
+                    <g transform="translate(240, 250)">
+                        <g id="asm-slot-r3" opacity="0.25">
+                            <rect x="-24" y="-14" width="48" height="28" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" rx="4" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">1KΩ</text>
+                        </g>
+                        <g id="asm-item-r3" class="hidden component-placed">
+                            <rect x="-20" y="-10" width="40" height="20" fill="#0f172a" stroke="#38bdf8" stroke-width="3" rx="2" />
+                            <text x="0" y="-15" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="middle">م3 (1KΩ)</text>
+                        </g>
+                    </g>
+
+                    <!-- 5. SLOT & PLACED ITEM: BC547 TRANSISTOR -->
+                    <g transform="translate(350, 250)">
+                        <g id="asm-slot-trans" opacity="0.25">
+                            <circle cx="0" cy="0" r="28" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">BC547</text>
+                        </g>
+                        <g id="asm-item-trans" class="hidden component-placed">
+                            <line x1="-20" y1="0" x2="-8" y2="0" stroke="#38bdf8" stroke-width="2.5" />
+                            <line x1="-8" y1="-18" x2="-8" y2="18" stroke="#38bdf8" stroke-width="4" />
+                            <line x1="-8" y1="-10" x2="0" y2="-30" stroke="#38bdf8" stroke-width="2.5" />
+                            <line x1="-8" y1="10" x2="0" y2="30" stroke="#38bdf8" stroke-width="2.5" />
+                            <polygon points="-2,24 2,32 -6,28" fill="#38bdf8" />
+                            <text x="20" y="5" fill="#38bdf8" font-size="13" font-weight="bold">BC547</text>
+                        </g>
+                    </g>
+
+                    <!-- 6. SLOT & PLACED ITEM: R1 (330Ω) -->
+                    <g transform="translate(350, 110)">
+                        <g id="asm-slot-r1" opacity="0.25">
+                            <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" rx="4" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">330Ω</text>
+                        </g>
+                        <g id="asm-item-r1" class="hidden component-placed">
+                            <rect x="-10" y="-18" width="20" height="36" fill="#0f172a" stroke="#38bdf8" stroke-width="3" rx="2" />
+                            <text x="-18" y="5" fill="#38bdf8" font-size="13" font-weight="bold" text-anchor="end">م1 (330Ω)</text>
+                        </g>
+                    </g>
+
+                    <!-- 7. SLOT & PLACED ITEM: LED D1 -->
+                    <g transform="translate(350, 190)">
+                        <g id="asm-slot-led" opacity="0.25">
+                            <circle cx="0" cy="0" r="20" fill="none" stroke="#94a3b8" stroke-dasharray="4" stroke-width="2" />
+                            <text x="0" y="4" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">LED</text>
+                        </g>
+                        <g id="asm-item-led" class="hidden component-placed">
+                            <polygon points="-12,-10 12,-10 0,10" fill="#0f172a" stroke="#ef4444" stroke-width="3" />
+                            <line x1="-12" y1="10" x2="12" y2="10" stroke="#ef4444" stroke-width="3" />
+                            <circle cx="0" cy="0" r="22" fill="#ef4444" opacity="0.2" />
+                            <text x="30" y="5" fill="#ef4444" font-size="13" font-weight="bold">LED D1</text>
+                        </g>
+                    </g>
+
+                </svg>
+
+            </div>
+
+            <!-- Bottom Components Tray -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl">
+                <h4 class="text-xs font-bold text-slate-300 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-indigo-400"></i>
+                    انقر على أي قطعة لإضافتها وإضاءة موقعها في الدارة مباشرة:
+                </h4>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                    
+                    <!-- Item 1: Battery -->
+                    <button id="btn-asm-battery" onclick="placeComponent('battery')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-indigo-950/80 border border-indigo-700/60 rounded-xl flex items-center justify-center text-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-battery-full text-lg"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white block">بطارية 9V</span>
+                    </button>
+
+                    <!-- Item 2: R2 -->
+                    <button id="btn-asm-r2" onclick="placeComponent('r2')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-sky-950/80 border border-sky-700/60 rounded-xl flex items-center justify-center text-sky-400 mb-2 group-hover:scale-110 transition-transform font-black text-xs">
+                            100K
+                        </div>
+                        <span class="text-xs font-bold text-white block">مقاومة متغيرة $R_2$</span>
+                    </button>
+
+                    <!-- Item 3: LDR -->
+                    <button id="btn-asm-ldr" onclick="placeComponent('ldr')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-amber-950/80 border border-amber-700/60 rounded-xl flex items-center justify-center text-amber-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-sun text-lg"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white block">مجس ضوئي LDR</span>
+                    </button>
+
+                    <!-- Item 4: R3 -->
+                    <button id="btn-asm-r3" onclick="placeComponent('r3')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-slate-800 border border-slate-600 rounded-xl flex items-center justify-center text-blue-400 mb-2 group-hover:scale-110 transition-transform font-black text-xs">
+                            1KΩ
+                        </div>
+                        <span class="text-xs font-bold text-white block">مقاومة $R_3$ (1KΩ)</span>
+                    </button>
+
+                    <!-- Item 5: BC547 -->
+                    <button id="btn-asm-trans" onclick="placeComponent('trans')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-indigo-950/80 border border-indigo-700/60 rounded-xl flex items-center justify-center text-indigo-300 mb-2 group-hover:scale-110 transition-transform font-black text-[10px]">
+                            BC547
+                        </div>
+                        <span class="text-xs font-bold text-white block">ترانزستور BC547</span>
+                    </button>
+
+                    <!-- Item 6: R1 -->
+                    <button id="btn-asm-r1" onclick="placeComponent('r1')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-slate-800 border border-slate-600 rounded-xl flex items-center justify-center text-blue-400 mb-2 group-hover:scale-110 transition-transform font-black text-xs">
+                            330Ω
+                        </div>
+                        <span class="text-xs font-bold text-white block">مقاومة $R_1$ (330Ω)</span>
+                    </button>
+
+                    <!-- Item 7: LED -->
+                    <button id="btn-asm-led" onclick="placeComponent('led')" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500 rounded-2xl p-3 text-center transition-all group flex flex-col items-center justify-between shadow-lg">
+                        <div class="w-10 h-10 bg-red-950/80 border border-red-700/60 rounded-xl flex items-center justify-center text-red-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-regular fa-lightbulb text-lg"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white block">ثنائي LED D1</span>
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 border-t border-slate-800/80 text-xs text-slate-500 mt-8">
+        تطبيق محاكاة فيزياء وإلكترونيات تفاعلي للطلاب | إعداد وتصميم <span class="text-slate-300 font-bold">المعلم محمد راشد</span>
+    </footer>
+
+    <!-- INTERACTIVE SCRIPT LOGIC -->
+    <script>
+        // TAB SWITCHING LOGIC
+        function switchTab(tabIndex) {
+            const t1Btn = document.getElementById('tab1-btn');
+            const t2Btn = document.getElementById('tab2-btn');
+            const t1Content = document.getElementById('tab1-content');
+            const t2Content = document.getElementById('tab2-content');
+
+            if (tabIndex === 1) {
+                t1Btn.classList.add('active');
+                t2Btn.classList.remove('active');
+                t1Content.classList.remove('hidden');
+                t2Content.classList.add('hidden');
+                updateSimulation();
+            } else {
+                t2Btn.classList.add('active');
+                t1Btn.classList.remove('active');
+                t2Content.classList.remove('hidden');
+                t1Content.classList.add('hidden');
+            }
+        }
+
+        // OPTION 1: SIMULATION LOGIC
+        const lightSlider = document.getElementById('sim-light-slider');
+        const r2Slider = document.getElementById('sim-r2-slider');
+
+        lightSlider.addEventListener('input', updateSimulation);
+        r2Slider.addEventListener('input', updateSimulation);
+
+        function updateSimulation() {
+            const lightVal = parseFloat(lightSlider.value); // 0 (Darkness) to 100 (Bright Light)
+            const r2Kohm = parseFloat(r2Slider.value); // 1K to 100K
+
+            // Update Slider Text Badges
+            document.getElementById('light-val-badge').textContent = `${lightVal}% (${lightVal > 50 ? 'نهار مشمس' : lightVal > 20 ? 'ضوء خافت' : 'ظلام تام'})`;
+            document.getElementById('r2-val-badge').textContent = `${r2Kohm} KΩ`;
+
+            // Calculate LDR Resistance: Bright light = low resistance (~100Ω), Dark = high resistance (~100,000Ω)
+            // Exponential relationship approximation
+            const rLdrOhm = 100 + Math.pow((100 - lightVal) / 100, 2.5) * 99900;
+            const r2Ohm = r2Kohm * 1000;
+
+            // Voltage Divider Calculation at Transistor Base (V_B)
+            // V_B = V_CC * (R_LDR) / (R2 + R_LDR)
+            const V_CC = 9.0;
+            const V_B = V_CC * (rLdrOhm / (r2Ohm + rLdrOhm));
+
+            // Transistor Threshold Voltage ~ 0.65V - 0.70V
+            const isTransistorOn = V_B >= 0.68;
+
+            // DOM Elements for Updates
+            const transStatText = document.getElementById('stat-transistor');
+            const transStatIcon = document.getElementById('stat-trans-icon');
+            const ledStatText = document.getElementById('stat-led');
+            const ledStatIcon = document.getElementById('stat-led-icon');
+            const ldrResText = document.getElementById('stat-ldr-res');
+            const vbText = document.getElementById('stat-vb');
+
+            const electronPath = document.getElementById('electron-path-main');
+            const ledRays = document.getElementById('led-light-rays');
+            const ledGlowCircle = document.getElementById('led-glow-circle');
+            const ldrArrows = document.getElementById('ldr-light-arrows');
+
+            // LDR Arrows Opacity based on light
+            ldrArrows.setAttribute('opacity', (lightVal / 100).toFixed(2));
+
+            // Update Metrics
+            ldrResText.textContent = rLdrOhm > 1000 ? `${(rLdrOhm / 1000).toFixed(1)} KΩ` : `${Math.round(rLdrOhm)} Ω`;
+            vbText.textContent = `${V_B.toFixed(2)} V`;
+
+            if (isTransistorOn) {
+                // DARKNESS DETECTED -> LED IS ON!
+                transStatText.textContent = "ON (في حالة توصيل / إشباع)";
+                transStatText.className = "text-base font-black text-emerald-400";
+                transStatIcon.className = "w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400";
+                transStatIcon.innerHTML = `<i class="fa-solid fa-toggle-on text-xl"></i>`;
+
+                ledStatText.textContent = "مضيء 🔴 (كشف الظلام)";
+                ledStatText.className = "text-base font-black text-red-400";
+                ledStatIcon.className = "w-10 h-10 rounded-xl bg-red-950/80 border border-red-800 flex items-center justify-center text-red-400 animate-pulse";
+                ledStatIcon.innerHTML = `<i class="fa-solid fa-lightbulb text-xl"></i>`;
+
+                // Visual Animations
+                electronPath.classList.remove('opacity-0');
+                ledRays.classList.remove('opacity-0');
+
+                // Dynamic LED Brightness
+                const ledBrightness = Math.min(1, (V_B - 0.6) * 1.5);
+                ledGlowCircle.setAttribute('opacity', (ledBrightness * 0.45).toFixed(2));
+
+            } else {
+                // LIGHT DETECTED -> LED IS OFF
+                transStatText.textContent = "OFF (في حالة قطع)";
+                transStatText.className = "text-base font-black text-slate-400";
+                transStatIcon.className = "w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500";
+                transStatIcon.innerHTML = `<i class="fa-solid fa-toggle-off text-xl"></i>`;
+
+                ledStatText.textContent = "مطفأ ⚪";
+                ledStatText.className = "text-base font-black text-slate-400";
+                ledStatIcon.className = "w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-500";
+                ledStatIcon.innerHTML = `<i class="fa-regular fa-lightbulb text-xl"></i>`;
+
+                // Visual Animations
+                electronPath.classList.add('opacity-0');
+                ledRays.classList.add('opacity-0');
+                ledGlowCircle.setAttribute('opacity', '0');
+            }
+        }
+
+        // OPTION 2: CIRCUIT ASSEMBLY LOGIC
+        const assembledParts = {
+            battery: false,
+            r2: false,
+            ldr: false,
+            r3: false,
+            trans: false,
+            r1: false,
+            led: false
+        };
+
+        function placeComponent(partKey) {
+            if (assembledParts[partKey]) return; // Already placed
+
+            assembledParts[partKey] = true;
+
+            // Hide Slot & Show Highlighted Placed Component
+            const slotElem = document.getElementById(`asm-slot-${partKey}`);
+            const itemElem = document.getElementById(`asm-item-${partKey}`);
+            const btnElem = document.getElementById(`btn-asm-${partKey}`);
+
+            if (slotElem) slotElem.classList.add('hidden');
+            if (itemElem) itemElem.classList.remove('hidden');
+
+            // Highlight button as placed
+            if (btnElem) {
+                btnElem.classList.add('opacity-40', 'pointer-events-none', 'border-emerald-500');
+                btnElem.classList.remove('hover:border-indigo-500');
+            }
+
+            checkAssemblyStatus();
+        }
+
+        function checkAssemblyStatus() {
+            const placedCount = Object.values(assembledParts).filter(Boolean).length;
+            document.getElementById('assembly-count-text').textContent = `${placedCount} / 7 قطع`;
+
+            if (placedCount === 7) {
+                setTimeout(() => {
+                    document.getElementById('assembly-done-overlay').classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        function resetAssembly() {
+            Object.keys(assembledParts).forEach(key => {
+                assembledParts[key] = false;
+
+                const slotElem = document.getElementById(`asm-slot-${key}`);
+                const itemElem = document.getElementById(`asm-item-${key}`);
+                const btnElem = document.getElementById(`btn-asm-${key}`);
+
+                if (slotElem) slotElem.classList.remove('hidden');
+                if (itemElem) itemElem.classList.add('hidden');
+
+                if (btnElem) {
+                    btnElem.classList.remove('opacity-40', 'pointer-events-none', 'border-emerald-500');
+                    btnElem.classList.add('hover:border-indigo-500');
+                }
+            });
+
+            document.getElementById('assembly-count-text').textContent = `0 / 7 قطع`;
+            document.getElementById('assembly-done-overlay').classList.add('hidden');
+        }
+
+        // Initial Load Call
+        window.onload = function() {
+            updateSimulation();
+        };
+    </script>
+</body>
+</html>
